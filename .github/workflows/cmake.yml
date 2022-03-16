@@ -2,7 +2,7 @@ name: C++ CI
 
 on:
   push:
-    branches: [main] # NOTE: replace/update with appropriate branch name(s)
+    branches: [sg-2] # NOTE: replace/update with appropriate branch name(s)
     tags: ['*']
   pull_request:
     branches: [main] # NOTE: replace/update with appropriate branch name(s)
