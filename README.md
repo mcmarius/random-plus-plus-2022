@@ -31,7 +31,7 @@
   - [ ] `dynamic_cast`
 - [ ] suprascris cc/op= pentru copieri/atribuiri corecte, copy and swap
 - [ ] excepții
-  - [ ] ierarhie proprie (cu baza `std::exception` sau derivată din `std::exception`)
+  - [ ] ierarhie proprie (cu baza1 `std::exception` sau derivată din `std::exception`)
   - [ ] utilizare cu sens: de exemplu, `throw` în constructor, `try`/`catch` în `main`
 - [ ] funcții și atribute `static`
 - [ ] STL
