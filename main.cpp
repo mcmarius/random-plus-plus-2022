@@ -1,6 +1,7 @@
 
 #include <string>
 #include <ostream>
+#include <memory>
 #include "Incarcator.h"
 #include "Magazin.h"
 
@@ -46,10 +47,16 @@ class derivata1 : public baza1 {
 
 class baza2 {
 protected:
-    int x;
+    int x = 5;
     baza2(const baza2&) = default;
     baza2& operator=(const baza2&) = default;
 public:
+    friend std::ostream &operator<<(std::ostream &os, const baza2 &baza2);
+    virtual void afis(std::ostream& os) const {
+        auto& baza2 = *this;
+        os << "x: " << baza2.x;
+    }
+
     baza2() {
         std::cout << "constr baza2\n";
     }
@@ -60,17 +67,22 @@ public:
         std::cout << "f b2\n";
     }
     virtual void g();
-    virtual baza2* clone() = 0;
+    virtual std::shared_ptr<baza2> clone() = 0;
 };
 
 void baza2::g() {
     std::cout << "g b2\n";
 }
 
+std::ostream &operator<<(std::ostream &os, const baza2 &baza2) {
+    baza2.afis(os);
+    return os;
+}
+
 class derivata21 : public baza2 {
 public:
-    baza2 *clone() override {
-        return new derivata21(*this);
+    std::shared_ptr<baza2> clone() override {
+        return std::make_shared <derivata21>(*this);
     }
 
     void g() override {
@@ -92,8 +104,8 @@ public:
 
 class derivata22 : public baza2 {
 public:
-    baza2 *clone() override {
-        return new derivata22(*this);
+    std::shared_ptr<baza2> clone() override {
+        return std::make_shared <derivata22>(*this);
     }
 
     void g() override {
@@ -132,7 +144,29 @@ public:
     }
 };
 
+class colectie {
+    std::vector<std::shared_ptr<baza2>> chestii;
+public:
+    colectie(const colectie& other) {
+        for(const auto& chestie : other.chestii)
+            chestii.push_back(chestie->clone());
+    }
+    friend void swap(colectie& c1, colectie& c2) {
+        using std::swap;
+        swap(c1.chestii, c2.chestii);
+    }
 
+    colectie& operator=(const colectie& other) {
+        auto copie{other};
+        swap(copie, *this);
+        return *this;
+    }
+
+    void fa_de_toate() {
+        for(auto& chestie : chestii)
+            chestie->f();
+    }
+};
 
 int main() {
 //    baza2* b2 = new baza2[2];
@@ -144,15 +178,15 @@ int main() {
 //    derivata3* d3 = new derivata3;
 //    delete d3;
 //
-    baza2* b21 = new derivata22;
+    std::shared_ptr<baza2> b21 = std::make_shared <derivata21>();
     b21->f();
     baza2& refb2 = *b21;
     refb2.f();
     //baza2 copie(*b21);
     std::cout << "inainte de clone\n";
-    baza2* copie = b21->clone();
+    auto copie = b21->clone();
     copie->f();
-    delete b21;
+//    delete b21;
     baza3* b31 = new derivata3;
     delete b31;
 
