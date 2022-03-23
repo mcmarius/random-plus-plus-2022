@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <memory>
+#include <vector>
 #include "headers/Accesoriu.h"
 #include "headers/Microfon.h"
 
@@ -59,7 +61,7 @@ public:
         std::cout << "f b3\n";
     }
     virtual void g();
-    virtual baza3* clone() = 0;
+    virtual std::shared_ptr<baza3> clone() const = 0;
 };
 
 void baza3::g() {
@@ -68,8 +70,8 @@ void baza3::g() {
 
 class derivata31 : public baza3 {
 public:
-    baza3 *clone() override {
-        return new derivata31(*this);
+    [[nodiscard]] std::shared_ptr<baza3> clone() const override {
+        return std::make_shared <derivata31>(*this);
     }
 
     void g() override {
@@ -91,8 +93,8 @@ public:
 };
 class derivata32 : public baza3 {
 public:
-    baza3 *clone() override {
-        return new derivata32(*this);
+    [[nodiscard]] std::shared_ptr<baza3> clone() const override {
+        return std::make_shared <derivata32>(*this);
     }
 
     void g() override {
@@ -110,6 +112,31 @@ public:
         //super.f();
         std::cout << "f d32\n";
         baza3::f();
+    }
+};
+
+// std::unique_ptr
+// std::move
+
+class colectie {
+    std::vector<std::shared_ptr<baza3>> chestii;
+public:
+    colectie(const colectie& other) {
+        for(const auto& chestie : other.chestii)
+            chestii.push_back(chestie->clone());
+    }
+    friend void swap(colectie& c1, colectie& c2) {
+        using std::swap;
+        swap(c1.chestii, c2.chestii);
+    }
+    colectie& operator=(const colectie& other) {
+        auto copie{other};
+        swap(copie, *this);
+        return *this;
+    }
+    void fa_chestii() {
+        for(auto& chestie : chestii)
+            chestie->g();
     }
 };
 
@@ -137,9 +164,9 @@ int main() {
 //    baza3 copie{*b32};
 //    copie.g();
     std::cout << "inainte de clone\n";
-    baza3* copie2 = b32->clone();
+    auto copie2 = b32->clone();
     copie2->g();
-    delete copie2;
+//    delete copie2;
     delete b32;
 
     return 0;
