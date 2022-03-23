@@ -47,10 +47,13 @@ public:
 };
 
 class baza3 {
+    int z = 7;
 protected:
     baza3(const baza3&) = default;
     baza3& operator=(const baza3&) = default;
 public:
+    friend std::ostream &operator<<(std::ostream &os, const baza3 &baza3);
+
     baza3() {
         std::cout << "constr b3 \n";
     }
@@ -62,10 +65,21 @@ public:
     }
     virtual void g();
     virtual std::shared_ptr<baza3> clone() const = 0;
+    virtual void afis(std::ostream &ostream) const;
 };
 
 void baza3::g() {
     std::cout << "g b3\n";
+}
+
+std::ostream &operator<<(std::ostream &os, const baza3 &baza3) {
+    baza3.afis(os);
+    return os;
+}
+
+void baza3::afis(std::ostream &os) const {
+    const auto& baza3 = *this;
+    os << "z: " << baza3.z;
 }
 
 class derivata31 : public baza3 {
