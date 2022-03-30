@@ -32,7 +32,7 @@ public:
         std::cout << "constr b2\n";
     }
 
-    ~baza2() {
+    virtual ~baza2() {
         std::cout << "destr b2\n";
     }
 };
@@ -44,6 +44,22 @@ public:
     ~derivata2() {
         std::cout << "destr d2\n";
     }
+    void g() {
+        std::cout << "g d2\n";
+    }
+};
+class derivata22 : public baza2 {
+    int z{5};
+public:
+    derivata22() {
+        std::cout << "constr d22\n";
+    }
+    ~derivata22() {
+        std::cout << "destr d22\n";
+    }
+    void f() {
+        std::cout << z << "f d22\n";
+    }
 };
 
 class baza3 {
@@ -51,6 +67,7 @@ class baza3 {
 protected:
     baza3(const baza3&) = default;
     baza3& operator=(const baza3&) = default;
+    virtual void afisare(std::ostream &ostream) const = 0;
 public:
     friend std::ostream &operator<<(std::ostream &os, const baza3 &baza3);
 
@@ -65,7 +82,6 @@ public:
     }
     virtual void g();
     virtual std::shared_ptr<baza3> clone() const = 0;
-    virtual void afis(std::ostream &ostream) const;
 };
 
 void baza3::g() {
@@ -73,19 +89,23 @@ void baza3::g() {
 }
 
 std::ostream &operator<<(std::ostream &os, const baza3 &baza3) {
-    baza3.afis(os);
+    baza3.afisare(os);
     return os;
 }
 
-void baza3::afis(std::ostream &os) const {
+void baza3::afisare(std::ostream &ostream) const {
     const auto& baza3 = *this;
-    os << "z: " << baza3.z;
+    ostream << "z: " << baza3.z;
 }
 
 class derivata31 : public baza3 {
 public:
     [[nodiscard]] std::shared_ptr<baza3> clone() const override {
         return std::make_shared <derivata31>(*this);
+    }
+
+    void afisare(std::ostream &ostream) const override {
+        baza3::afisare(ostream);
     }
 
     void g() override {
@@ -109,6 +129,10 @@ class derivata32 : public baza3 {
 public:
     [[nodiscard]] std::shared_ptr<baza3> clone() const override {
         return std::make_shared <derivata32>(*this);
+    }
+
+    void afisare(std::ostream &ostream) const override {
+        baza3::afisare(ostream);
     }
 
     void g() override {
@@ -154,7 +178,72 @@ public:
     }
 };
 
+class eroare_aplicatie : public std::runtime_error {
+public:
+    explicit eroare_aplicatie(const std::string &arg) : runtime_error(arg) {
+        std::cout << "constr err\n";
+    }
+};
+
+class eroare_tabla : public eroare_aplicatie {
+public:
+    explicit eroare_tabla(const std::string &arg) : eroare_aplicatie(arg) {}
+};
+
+class eroare_marker : public eroare_aplicatie {
+public:
+    explicit eroare_marker(const std::string &arg) : eroare_aplicatie("marker: " + arg) {}
+};
+
+void f2() {
+    std::cout << "inainte f2\n";
+    throw eroare_marker{"eroare f2"};
+    std::cout << "dupa f2\n";
+}
+
+void f1() {
+    std::cout << "inainte f1\n";
+    try {
+        f2();
+        throw eroare_tabla{"err f1"};
+        std::cout << "dupa f1\n";
+    } catch (eroare_aplicatie& err) {
+        std::cout << err.what() << " catch f1\n";
+        throw eroare_aplicatie{"aaa"};
+        std::cout << "dupa throw;\n";
+    }
+    std::cout << "dupa catch f1\n";
+}
+
 int main() {
+    //f1();
+    try {
+        std::cout << "inainte in main\n";
+        f1();
+        std::cout << "dupa in main\n";
+    } catch (std::exception& err) {
+//        std::cout << err.what() << " catch main\n";
+    }
+//    catch(...) {
+//
+//    }
+    baza2 *b01 = new derivata2;
+//    auto& der0 = static_cast<derivata22&>(*b01);
+//    der0.f();
+    try {
+        auto& der = dynamic_cast<derivata2&>(*b01);
+//        der.f();
+        der.g();
+    } catch (std::bad_cast& err) {
+        std::cout << err.what() << "\n";
+    }
+    if(auto der2 = dynamic_cast<derivata22*>(b01)) {
+        der2->f();
+        std::cout << "a reusit\n";
+    }
+    else
+        std::cout<<"nu a reusit cast-ul\n";
+    delete b01;
 //    baza2 b21;
 //    [[maybe_unused]] baza2 *b2 = new baza2;
 //    delete b2;
